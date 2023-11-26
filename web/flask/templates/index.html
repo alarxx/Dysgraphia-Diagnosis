@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <title>Dysgraphia</title>
+
+    <style>
+        /* Стилизация остается прежней */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding: 50px;
+        }
+
+        #upload-form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+        }
+
+        #upload-form input[type="file"] {
+            margin-bottom: 10px;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #e2e2e2;
+            display: none; /* Изначально скрыт */
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #loading {
+            display: none;
+        }
+
+        #preview-container {
+            text-align: center; /* Центрирование содержимого контейнера */
+            margin-top: 20px; /* Отступ сверху для отделения от остальных элементов */
+        }
+
+        #image-preview {
+            max-width: 400px; /* Максимальная ширина изображения */
+            max-height: 400px; /* Максимальная высота изображения */
+            display: none; /* Изначально скрыто */
+            margin: 0 auto; /* Автоматические отступы слева и справа для горизонтального центрирования */
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Dysgraphia Detection</h1>
+    <div id="preview-container">
+        <img id="image-preview" src="#" alt="Image Preview" style="display: none; max-width: 400px; max-height: 400px;"/>
+    </div>
+    <form id="upload-form">
+        <input type="file" name="file" accept="image/*" id="file-input"><br>
+        <button type="submit">Classify Image</button>
+    </form>
+    <div id="loading">Processing...</div>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('file-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onloadend = function() {
+                document.getElementById('image-preview').src = reader.result;
+                document.getElementById('image-preview').style.display = 'block';
+            }
+            if (file) {
+                reader.readAsDataURL(file);
+            } else {
+                document.getElementById('image-preview').src = '';
+                document.getElementById('image-preview').style.display = 'none';
+            }
+        });
+
+        document.getElementById('upload-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const formData = new FormData(this);
+
+            result.style.display = 'none';
+            loading.style.display = 'block';
+
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const predictionText = data.prediction === '0' ? 'Healthy' : 'Dysgraphia';
+                result.textContent = `Prediction: ${predictionText}`;
+                result.style.display = 'block';
+                loading.style.display = 'none';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loading.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>

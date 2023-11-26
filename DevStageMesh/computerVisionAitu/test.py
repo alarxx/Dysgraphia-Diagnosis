@@ -56,4 +56,4 @@ def test_model(model_path, test_data_dir):
 
 if __name__=="__main__":
     # Example usage:
-    test_model(model_path="weights1/model_fold2.pth", test_data_dir="test")
+    test_model(model_path="model_fold2.pth", test_data_dir="test")

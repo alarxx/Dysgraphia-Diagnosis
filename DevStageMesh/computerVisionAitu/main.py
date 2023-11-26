@@ -1,77 +1,154 @@
 import os
 import time
-import torch
+
 import torchvision
-import torchvision.transforms as transforms
+from PIL import Image
+import torch
+from torch.utils.data import Dataset, DataLoader
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 
-from torchvision.models import resnet50, ResNet50_Weights
+from torchvision.models import vgg16, VGG16_Weights
+from torchvision import transforms
 
-from torch.utils.data import DataLoader, random_split
+import matplotlib.pyplot as plt
+
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import f1_score, precision_score, recall_score
 from sklearn.metrics import roc_curve, auc
-import matplotlib.pyplot as plt
-import numpy as np
-import cv2
-import random
-from PIL import Image
 
 
-# Определение класса RandomContoursRemovalTransform
-class RandomContoursRemovalTransform(object):
-    def __init__(self, removal_probability=0.4):
-        self.removal_probability = removal_probability
+class CustomImageDataset(Dataset):
+    def __init__(self, main_dir, transform=None):
+        self.main_dir = main_dir
+        self.transform = transform
+        # list containing the names of the subfolders in main directory
+        self.classes = os.listdir(main_dir)
+        # alphabetical ascending order
+        self.classes.sort()
+        self.class_to_idx = {cls_name: i for i, cls_name in enumerate(self.classes)}
 
-    def __call__(self, img):
-        # Convert PIL image to numpy array
-        img_np = np.array(img)
+        # list of tuples if form ("fullpath/img", class_index), sequence of items that can't be changed (immutable)
+        self.imgs = []
+        for cls in self.classes:
+            cls_folder = os.path.join(self.main_dir, cls)
+            for img in os.listdir(cls_folder):
+                self.imgs.append((os.path.join(cls_folder, img), self.class_to_idx[cls]))
 
-        # Convert RGB to Grayscale
-        gray_img = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
+    def __len__(self):
+        return len(self.imgs)
 
-        # Apply threshold using Otsu's method
-        _, binary_img = cv2.threshold(gray_img, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    def __getitem__(self, idx):
+        img_path, label = self.imgs[idx]
+        image = Image.open(img_path).convert("RGB")
 
-        # Find contours, remove some, and draw them back onto the RGB image
-        contours, _ = cv2.findContours(binary_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        num_contours_to_remove = int(len(contours) * self.removal_probability)
-        contours_to_remove = random.sample(contours, num_contours_to_remove)
-        cv2.drawContours(img_np, contours_to_remove, -1, (255, 255, 255), -1)
+        if self.transform:
+            image = self.transform(image)
 
-        return Image.fromarray(img_np)
+        return image, label
 
 
-if __name__ == '__main__':
-    print("cuda.is_available " + str(torch.cuda.is_available()))
-    # Define data transforms
+
+
+# allwidth, allheight = 0, 0
+
+# for idx in range(len(dataset)):
+#     # Get image and label
+#     image, label = dataset[idx]
+#     # peculiarity image.shape of is that it gives the opposite values, usually it is considered width, height, depth
+#     depth, height, width = image.shape[0], image.shape[1], image.shape[2]
+
+#     allwidth+=width
+#     allheight+=height
+
+#     print(f"Image {idx}:")
+#     print(f"Depth: {depth}, Width: {width}, Height: {height}")  # Print image dimensions
+#     print(f"Label: {label}")  # Print image label
+#     print("-" * 20)
+
+# print("Average width=", allwidth/len(dataset), ", height=", allheight/len(dataset))
+
+def conv_output_size(input_size, filter_size, stride, padding):
+    output_size = ((input_size - filter_size + 2 * padding) // stride) + 1
+    return output_size
+
+
+def afterConvs(input_size):
+    input_size = conv_output_size(input_size, 3, 1, 0)
+    input_size = conv_output_size(input_size, 2, 2, 0)
+    input_size = conv_output_size(input_size, 3, 3, 0)
+    input_size = conv_output_size(input_size, 2, 2, 0)
+    return input_size
+
+
+class MyCNN(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        # Convolutional layers
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, stride=1, padding=0)
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=3, padding=0)
+
+        # Batch normalization layers
+        self.batchnorm1 = nn.BatchNorm2d(32)
+        self.batchnorm2 = nn.BatchNorm2d(64)
+
+        # Pooling layer
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+
+        # Fully connected layers
+        self.fc1 = nn.Linear(afterConvs(INPUT_SIZE) * afterConvs(INPUT_SIZE) * 64, 1024)
+        self.fc2 = nn.Linear(1024, 30)
+
+        # Dropout
+        self.dropout = nn.Dropout(0.5)
+
+        # Initialize weights
+        nn.init.xavier_uniform_(self.conv1.weight)
+        nn.init.xavier_uniform_(self.conv2.weight)
+        nn.init.normal_(self.fc1.weight, std=0.01)
+        nn.init.normal_(self.fc2.weight, std=0.01)
+
+    def forward(self, x):
+        # Apply convolutional layers, batch normalization, and ReLU activation
+        x = self.pool(F.relu(self.batchnorm1(self.conv1(x))))
+        x = self.pool(F.relu(self.batchnorm2(self.conv2(x))))
+
+        # Flatten the tensor for the fully connected layer
+        x = x.flatten(start_dim=1)
+        # Apply fully connected layers with Sigmoid and dropout
+        x = F.sigmoid(self.fc1(x))
+        x = self.dropout(x)
+        x = F.sigmoid(self.fc2(x))
+
+        return x
+
+
+if __name__ == "__main__":
+
+    data_dir = "train"
+
+    INPUT_SIZE = 224
+
+    # Usage Example
     transform = transforms.Compose([
-        transforms.Resize((400, 400)),
-        RandomContoursRemovalTransform(removal_probability=0.4),
-        transforms.RandomCrop((224, 224)),
-        # transforms.RandomHorizontalFlip(),
-        # transforms.RandomVerticalFlip(p=0.5),
+        transforms.Resize((INPUT_SIZE, INPUT_SIZE)),
         transforms.RandomRotation(3),
-        # transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
-        # transforms.RandomAffine(degrees=10, translate=(0.1, 0.1), scale=(0.9, 1.1)),
-        # transforms.GaussianBlur(kernel_size=5, sigma=(0.1, 2.0)),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
 
-
-    # Define data directory
-    data_dir = "train"
+    # dataset = CustomImageDataset(main_dir=data_dir, transform=transform)
     dataset = torchvision.datasets.ImageFolder(root=data_dir, transform=transform)
+    data_loader = DataLoader(dataset, batch_size=4, shuffle=True)
 
     # Determine the number of classes in your dataset
     num_classes = len(os.listdir(data_dir))
 
     # Define hyperparameters
-    num_epochs = 40
+    num_epochs = 10
     learning_rate = 0.001
-    batch_size = 4
+    batch_size = 16
 
     # Define cross-validation strategy (e.g., 5-fold)
     kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
@@ -87,17 +164,14 @@ if __name__ == '__main__':
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
         val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
 
-
         # Define the model
-        model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)
-
-        # Replace the last fully connected layer
-        # ResNet50 uses 2048 features before the final layer
-        model.fc = nn.Linear(2048, num_classes)
-
+        # model = vgg16(weights=VGG16_Weights.IMAGENET1K_V1)
+        # model.classifier[6] = nn.Linear(4096, num_classes)
+        model = MyCNN()
 
         # Set the device
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        print(device)
         model.to(device)
 
         # Define the loss function and optimizer
@@ -164,36 +238,6 @@ if __name__ == '__main__':
         plt.ylim([0, 1])
         for i, v in enumerate(metrics):
             plt.text(i, v + 0.02, f"{v:.2f}", ha='center', va='bottom')
-        plt.show(block=False)
-
-        # После обучения модели и вычисления метрик для текущего fold
-        model.eval()
-        y_true = []
-        y_scores = []  # Список для хранения вероятностей классов
-
-        with torch.no_grad():
-            for data in val_loader:
-                images, labels = data
-                images = images.to(device)
-                outputs = model(images)
-                probabilities = torch.nn.functional.softmax(outputs, dim=1)  # Вычисление вероятностей
-                y_true.extend(labels.cpu().numpy())
-                y_scores.extend(probabilities[:, 1].cpu().numpy())  # Вероятности класса 1
-
-        # Вычисление ROC-кривой и AUC
-        fpr, tpr, thresholds = roc_curve(y_true, y_scores)
-        roc_auc = auc(fpr, tpr)
-
-        # Построение ROC-кривой
-        plt.figure()
-        plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (area = {roc_auc:.2f})')
-        plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title(f'Receiver Operating Characteristic (Fold {fold + 1})')
-        plt.legend(loc='lower right')
         plt.show(block=False)
 
         # Save the model for this fold if needed

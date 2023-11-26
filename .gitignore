@@ -20,6 +20,7 @@ parts/
 sdist/
 var/
 *.pth
+*.onnx
 
 wheels/
 share/python-wheels/

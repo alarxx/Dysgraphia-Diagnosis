@@ -10,22 +10,28 @@ A web application was developed as an interface to upload images and get a diagn
 Good results were obtained. Future research may include data collection with Cyrillic writing: Russian, Kazakh. 
 
 Additional data on sample participants:
+
 ![Subjects_Data](https://github.com/Alar-q/DysgraphiaRMAT/blob/main/git_images/Subjects_Data.png)
 
 Convert raw raw data (.svc, not .csv) to graphical vector view form:
+
 ![Dataset visualisation](https://github.com/Alar-q/DysgraphiaRMAT/blob/main/git_images/sentence.png)
 
 Healthy Example:
+
 ![Healthy_Example](https://github.com/Alar-q/DysgraphiaRMAT/blob/main/git_images/Healthy_Example.png)
 
 Dysgraphia Example:
+
 ![Dysgraphia_Example](https://github.com/Alar-q/DysgraphiaRMAT/blob/main/git_images/Dysgraphia_Example.png)
 
 
 Convert to Image Form:
+
 ![Image conversion](https://github.com/Alar-q/DysgraphiaRMAT/blob/main/git_images/image%20with%20handwriting.png)
 
 Words Detection:
+
 ![Words_Detection](https://github.com/Alar-q/DysgraphiaRMAT/blob/main/git_images/Words_Detection.jpg)
 
 

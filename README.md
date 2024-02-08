@@ -3,7 +3,7 @@ Research Methods and Tools.
 
 Application of image processing and deep learning technologies for the diagnosis of dysgraphia.
 
-A collected database of a Slovak manuscript from a group of school-aged children was used. Data collected from Wacom tablets were converted into digital images. Computer Vision and Deep Learning methods were used to process, analyse images and detect dysgraphia. 
+We used a database of Slovak manuscripts collected by a group of 120 school-aged children, 63 healthy examples and 57 examples of dysgraphia. Data collected from Wacom tablets were converted into digital images. Computer Vision and Deep Learning methods were used to process, analyse images and detect dysgraphia. 
 
 A web application was developed as an interface to upload images and get a diagnosis from our classification model.
 

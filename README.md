@@ -1,4 +1,7 @@
 # DysgraphiaRMAT
+
+Application of image processing and deep learning technologies for the diagnosis of dysgraphia.
+
 Research Methods and Tools
 
 ![Dataset visualisation](https://github.com/Alar-q/DysgraphiaRMAT/blob/main/git_images/sentence.png)

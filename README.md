@@ -1,4 +1,4 @@
-# DysgraphiaRMAT
+# Dysgraphia-Diagnosis
 Research Methods and Tools.
 
 Application of image processing and deep learning technologies for the diagnosis of dysgraphia.
@@ -43,6 +43,8 @@ Augmenting the data by removing a random percentage of words from the image:
 ![Remove_Words](https://github.com/Alar-q/DysgraphiaRMAT/blob/main/git_images/Remove_Words.jpg)
 
 ![Test](https://github.com/Alar-q/DysgraphiaRMAT/blob/main/git_images/test_code.jpg)
+VGG-16:
+![VGG-16](https://github.com/Alar-q/Dysgraphia-Diagnosis/blob/main/git_images/VGG-16.png)
 ![Results](https://github.com/Alar-q/DysgraphiaRMAT/blob/main/git_images/evaluation.png)
 ![All_Results](https://github.com/Alar-q/DysgraphiaRMAT/blob/main/git_images/All_Results.png)
 

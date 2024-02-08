@@ -3,7 +3,11 @@ Research Methods and Tools.
 
 Application of image processing and deep learning technologies for the diagnosis of dysgraphia.
 
-We used a database of Slovak manuscripts collected by a group of 120 school-aged children, 63 healthy examples and 57 examples of dysgraphia. Data collected from Wacom tablets were converted into digital images. Computer Vision and Deep Learning methods were used to process, analyse images and detect dysgraphia. 
+A dataset of Slovak manuscripts collected by a group of 120 school-aged children, 63 healthy examples and 57 examples with dysgraphia, was used. Data collected from Wacom tablets were converted into digital images. Computer Vision and Deep Learning methods were used to process, analyse images and detect dysgraphia. 
+
+Models such as VGG and ResNet were emphasised. The dataset was divided into a training, validation and test dataset to confirm the reliability of the results. 
+To avoid overfitting the model, I used augmentation techniques such as random cropping, rotating the image and augmenting the data by removing a random percentage of words from the image.
+The results turned out to be about 80% accurate given such a small dataset.
 
 A web application was developed as an interface to upload images and get a diagnosis from our classification model.
 
@@ -34,13 +38,15 @@ Words Detection:
 
 ![Words_Detection](https://github.com/Alar-q/DysgraphiaRMAT/blob/main/git_images/Words_Detection.jpg)
 
-To avoid overfitting the model, I used augmentation techniques such as random cropping, rotating the image and augmenting the data by removing a random percentage of words from the image:
+Augmenting the data by removing a random percentage of words from the image:
 
 ![Remove_Words](https://github.com/Alar-q/DysgraphiaRMAT/blob/main/git_images/Remove_Words.jpg)
 
 ![Test](https://github.com/Alar-q/DysgraphiaRMAT/blob/main/git_images/test_code.jpg)
 ![Results](https://github.com/Alar-q/DysgraphiaRMAT/blob/main/git_images/evaluation.png)
 ![All_Results](https://github.com/Alar-q/DysgraphiaRMAT/blob/main/git_images/All_Results.png)
+
+An interface for uploading images and obtaining a diagnosis from our classification model:
 
 ![Web_Application](https://github.com/Alar-q/DysgraphiaRMAT/blob/main/git_images/Web_Application.png)
 

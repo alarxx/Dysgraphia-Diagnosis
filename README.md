@@ -34,6 +34,9 @@ Words Detection:
 
 ![Words_Detection](https://github.com/Alar-q/DysgraphiaRMAT/blob/main/git_images/Words_Detection.jpg)
 
+To avoid overfitting the model, I used augmentation techniques such as random cropping, rotating the image and augmenting the data by removing a random percentage of words from the image:
+
+![Remove_Words](https://github.com/Alar-q/DysgraphiaRMAT/blob/main/git_images/Remove_Words.jpg)
 
 ![Test](https://github.com/Alar-q/DysgraphiaRMAT/blob/main/git_images/test_code.jpg)
 ![Results](https://github.com/Alar-q/DysgraphiaRMAT/blob/main/git_images/evaluation.png)

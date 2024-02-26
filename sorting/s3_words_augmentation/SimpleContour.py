@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 # Load the image
-image_path = '00032.png'  # Замените на путь к вашему изображению
+image_path = '00114.png'  # Замените на путь к вашему изображению
 image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
 # Apply threshold to get binary image

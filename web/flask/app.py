@@ -42,17 +42,58 @@ def index():
     # Отображение HTML-страницы
     return render_template('index.html')
 
+
+import cv2
+import numpy as np
+from flask import Flask, request, jsonify
+from werkzeug.utils import secure_filename
+import base64
+from io import BytesIO
+from PIL import Image
+
+app = Flask(__name__)
+
 @app.route('/predict', methods=['POST'])
 def predict():
-    if 'file' not in request.files:
-        return jsonify({'error': 'no file'})
     file = request.files['file']
-    img_bytes = file.read()
-    tensor = transform_image(img_bytes)
-    outputs = vgg16(tensor)
-    _, y_hat = outputs.max(1)
-    predicted_idx = str(y_hat.item())
-    return jsonify({'prediction': predicted_idx})
+    filename = secure_filename(file.filename)
+    filepath = os.path.join('uploads', filename)
+    file.save(filepath)
+
+    # Загрузка изображения
+    image = cv2.imread(filepath)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # Можно добавить предварительную обработку изображения, если это необходимо
+    # Обнаружение контуров (простой пример, может потребоваться настройка)
+    edges = cv2.Canny(gray, 30, 150)
+    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cv2.drawContours(image, contours, -1, (0, 255, 0), 2)
+
+    # Конвертация изображения для отправки клиенту
+    img_pil = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+    buffered = BytesIO()
+    img_pil.save(buffered, format="JPEG")
+    img_str = base64.b64encode(buffered.getvalue()).decode()
+
+    # Отправка обработанного изображения обратно
+    return jsonify({'image': img_str})
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+
+# @app.route('/predict', methods=['POST'])
+# def predict():
+#     if 'file' not in request.files:
+#         return jsonify({'error': 'no file'})
+#     file = request.files['file']
+#     img_bytes = file.read()
+#     tensor = transform_image(img_bytes)
+#     outputs = vgg16(tensor)
+#     _, y_hat = outputs.max(1)
+#     predicted_idx = str(y_hat.item())
+#     return jsonify({'prediction': predicted_idx})
+
+# if __name__ == '__main__':
+#     app.run(debug=True)
